@@ -49,6 +49,21 @@ Context::Context(void* device, const char* properties) : device_(device) {
   for (auto& selected_device_name : selected_device_names_) {
     NNADAPTER_LOG(INFO) << selected_device_name;
   }
+  // INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS
+  int cpu_threads_num = -1;
+  if (key_values.count(INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS)) {
+    cpu_threads_num = stoi(
+        key_values[INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS]);
+  } else {
+    cpu_threads_num = stoi(
+        GetStringFromEnv(INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS));
+  }
+  NNADAPTER_CHECK_GE(cpu_threads_num, 0);
+  if(cpu_threads_num >= 0) {
+    device_config_map_["CPU"].emplace(ov::inference_num_threads(cpu_threads_num));
+  }
+  NNADAPTER_LOG(INFO) << "openvino cpu inference threads(-1 means without user setting): "
+                      << cpu_threads_num;
 }
 
 Context::~Context() {}
@@ -60,6 +75,7 @@ int Program::Build(core::Model* model, core::Cache* cache) {
   auto device_name = context_->GetFirtSelectedDeviceName();
   NNADAPTER_LOG(INFO) << device_name << " version - "
                       << runtime_core_->get_versions(device_name);
+  InitializeDeviceConfig(device_name, runtime_core_, *context_->GetDeviceConfig());
   return cache->buffer.empty() ? BuildFromModel(model) : BuildFromCache(cache);
 }
 

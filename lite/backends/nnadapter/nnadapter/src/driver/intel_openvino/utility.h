@@ -32,6 +32,15 @@ namespace intel_openvino {
 // INTEL_OPENVINO_SELECT_DEVICE_NAMES=CPU
 #define INTEL_OPENVINO_SELECT_DEVICE_NAMES "INTEL_OPENVINO_SELECT_DEVICE_NAMES"
 
+// Specify CPU inference threads.
+#define INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS  "INTEL_OPENVINO_CPU_INFERENCE_NUM_THREADS "
+
+// Initialize device config for runtime core.
+void InitializeDeviceConifg(
+    const std::string& device,
+    ov::Core& core,
+    std::map<std::string, ov::AnyMap>& config);
+
 // Convert NNAdapterAutoPadCode to OpenVINO ov::op::PadType
 PadType ConvertToOVPadType(const NNAdapterAutoPadCode& auto_pad_code);
 // Convert NNAdapterOperandPrecisionCode to OpenVINO ov::element::Type
