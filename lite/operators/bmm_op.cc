@@ -29,6 +29,7 @@ bool BmmOpLite::CheckShape() const {
 
   CHECK_EQ(x_dims.size(), 3);
   CHECK_EQ(y_dims.size(), 3);
+  CHECK_EQ(x_dims[0], y_dims[0]);
   CHECK_EQ(x_dims[2], y_dims[1]);
   return true;
 }
@@ -36,7 +37,7 @@ bool BmmOpLite::CheckShape() const {
 bool BmmOpLite::InferShapeImpl() const {
   const auto x_dims = param_.X->dims();
   const auto y_dims = param_.Y->dims();
-  DDim dim_out(std::vector<int64_t>({x_dims[1], y_dims[2]}));
+  DDim dim_out(std::vector<int64_t>({x_dims[0], x_dims[1], y_dims[2]}));
   param_.Out->Resize(dim_out);
   return true;
 }

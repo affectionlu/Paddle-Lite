@@ -51,7 +51,7 @@ int ConvertPriorBox(Converter* converter, OpInfo* op, Scope* scope) {
   auto Variances_operand = converter->AddOutputOperand(Variances_name);
   auto min_sizes_operand = converter->AddConstantOperand(min_sizes);
   NNAdapterOperand* max_sizes_operand = nullptr;
-  if (!max_sizes.empty()) {
+  if (max_sizes.size() > 0) {
     max_sizes_operand = converter->AddConstantOperand(max_sizes);
   }
   auto aspect_ratios_operand = converter->AddConstantOperand(aspect_ratios);
