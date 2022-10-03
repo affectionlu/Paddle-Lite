@@ -312,9 +312,11 @@ void PrecisionCastPass::AddCastInst(const Type& from,
     for (auto& kernel : kernels) {
       const Type* in_arg_ty = kernel->GetInputDeclType("Input");
       const Type* out_arg_ty = kernel->GetOutputDeclType("Out");
+
       if (TypeCompatible(*in_arg_ty, from) &&
           out_arg_ty->precision() == to.precision()) {
         is_found = true;
+
         selected_kernels.emplace_back(std::move(kernel));
         // we pick the kernel
         cast_inst->AsStmt(cast_type, std::move(selected_kernels), cast_op);

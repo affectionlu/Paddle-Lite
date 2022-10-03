@@ -30,11 +30,11 @@ find_path(INTEL_FPGA_SDK_INC NAMES intelfpga.h
 if (NOT INTEL_FPGA_SDK_INC)
   message(FATAL_ERROR "Can not find intelfpga.h in ${INTEL_FPGA_SDK_INC}/include")
 endif()
-
+message(STATUS "find intelfpga.h in ${INTEL_FPGA_SDK_INC}")
 include_directories("${INTEL_FPGA_SDK_INC}")
 
 find_library(INTEL_FPGA_SDK_LIB NAMES vnna
-  PATHS ${INTEL_FPGA_SDK_ROOT}/lib)
+  PATHS ${INTEL_FPGA_SDK_ROOT}/lib NO_DEFAULT_PATH)
 
 if(NOT INTEL_FPGA_SDK_LIB)
   message(FATAL_ERROR "Can not find INTEL_FPGA_LIB_FILE in ${INTEL_FPGA_SDK_ROOT}/lib")

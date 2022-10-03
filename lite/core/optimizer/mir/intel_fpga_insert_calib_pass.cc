@@ -12,41 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-
+#include "lite/core/optimizer/mir/intel_fpga_insert_calib_pass.h"
 #include <memory>
-#include <vector>
-#include "lite/core/optimizer/mir/pass.h"
+#include "lite/core/optimizer/mir/pass_registry.h"
 
 namespace paddle {
 namespace lite {
 namespace mir {
 
-class NPUSubgraphPass : public ProgramPass {
- public:
-  void Apply(const std::unique_ptr<SSAGraph>& graph) override;
-};
-
-class BMSubgraphPass : public ProgramPass {
- public:
-  void Apply(const std::unique_ptr<SSAGraph>& graph) override;
-};
-
-class MLUSubgraphPass : public ProgramPass {
- public:
-  void Apply(const std::unique_ptr<SSAGraph>& graph) override;
-};
-
-class IntelFPGASubgraphPass : public ProgramPass {
- public:
-  void Apply(const std::unique_ptr<SSAGraph>& graph) override;
-};
-
-class NNAdapterSubgraphPass : public ProgramPass {
- public:
-  void Apply(const std::unique_ptr<SSAGraph>& graph) override;
-};
-
+void IntelFPGAInsertCalibPass::Apply(const std::unique_ptr<SSAGraph> &graph) {
+  std::cout<<"IntelFPGAInsertCalibPass\n";
+  CorrectArgumentPlace(graph.get());
+}
 }  // namespace mir
 }  // namespace lite
 }  // namespace paddle
+
+REGISTER_MIR_PASS(intel_fpga_insert_calib_pass,
+                  paddle::lite::mir::IntelFPGAInsertCalibPass)
+    .BindTargets({TARGET(kIntelFPGA)});

@@ -363,8 +363,10 @@ void Predictor::Build(const std::shared_ptr<cpp::ProgramDesc> &program_desc,
   program_desc_ = program_desc;
   // `inner_places` is used to optimize passes
   std::vector<Place> inner_places = valid_places;
+  bool hasIntelFpgaTarget=false;
   for (auto &valid_place : valid_places) {
     if (valid_place.target == TARGET(kOpenCL)) continue;
+    if (valid_place.target == TARGET(kIntelFPGA)) hasIntelFpgaTarget=true;
     inner_places.emplace_back(
         Place(TARGET(kHost), valid_place.precision, valid_place.layout));
   }
@@ -378,6 +380,10 @@ void Predictor::Build(const std::shared_ptr<cpp::ProgramDesc> &program_desc,
       if (valid_place.target == TARGET(kX86)) {
         inner_places.insert(inner_places.begin(),
                             Place{TARGET(kX86), PRECISION(kInt8)});
+      }
+      if(hasIntelFpgaTarget){
+        inner_places.insert(inner_places.begin(),
+                            Place{TARGET(kIntelFPGA), PRECISION(kInt8)});
       }
     }
   }

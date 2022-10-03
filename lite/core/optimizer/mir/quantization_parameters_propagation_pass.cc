@@ -411,4 +411,4 @@ void QuantizationParametersPropagationPass::Apply(
 
 REGISTER_MIR_PASS(quantization_parameters_propagation_pass,
                   paddle::lite::mir::QuantizationParametersPropagationPass)
-    .BindTargets({TARGET(kNNAdapter)});
+    .BindTargets({TARGET(kNNAdapter), TARGET(kIntelFPGA)});

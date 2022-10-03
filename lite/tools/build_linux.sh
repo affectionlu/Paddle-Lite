@@ -80,7 +80,7 @@ KUNLUNXIN_XPU_SDK_ENV=""
 KUNLUNXIN_XPU_SDK_ROOT=""
 # options of compiling intel fpga.
 WITH_INTEL_FPGA=OFF
-INTEL_FPGA_SDK_ROOT="$(pwd)/intel_fpga_sdk"
+INTEL_FPGA_SDK_ROOT="$(pwd)/xkp_sdk"
 # options of adding training ops
 WITH_TRAIN=OFF
 # options of building tiny publish so
@@ -94,7 +94,8 @@ WITH_PRECISION_PROFILE=OFF
 # option of benchmark, default is OFF
 WITH_BENCHMARK=OFF
 # num of threads used during compiling..
-readonly NUM_PROC=${LITE_BUILD_THREADS:-4}
+# readonly NUM_PROC=${LITE_BUILD_THREADS:-4}
+readonly NUM_PROC=16
 #####################################################################################################
 
 

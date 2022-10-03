@@ -197,7 +197,7 @@ std::unique_ptr<RuntimeProgram> RunDefaultOptimizer(
        "lite_elementwise_scale_fuse_pass",            //
        "lite_instance_norm_activation_fuse_pass",     //
        "lite_flatten_fc_fuse_pass",                   //
-       "lite_fc_prelu_fuse_pass",                     //
+       "lite_fc_prelu_fuse_pass",                    //
        "lite_elementwise_activation_fuse_pass",
        "lite_conv_scale_fuse_pass",
        "lite_conv_elementwise_tree_fuse_pass",
@@ -229,8 +229,11 @@ std::unique_ptr<RuntimeProgram> RunDefaultOptimizer(
        "npu_subgraph_pass",
        "bm_subgraph_pass",
        "mlu_subgraph_pass",
+       "intel_fpga_kernel_place_correct_pass",
+       "intelfpga_subgraph_pass",
        "fpga_concat_fuse_pass",
        "control_flow_op_unused_inputs_and_outputs_eliminate_pass",
+
        "static_kernel_pick_pass",  // pick original kernel from graph
 #ifdef LITE_WITH_XPU
        "__xpu__static_kernel_pick_pass",  // xpu pick original kernel from graph
@@ -240,6 +243,7 @@ std::unique_ptr<RuntimeProgram> RunDefaultOptimizer(
        "variable_place_inference_pass",  // inference arg/var's
        "control_flow_op_shared_inputs_and_outputs_place_sync_pass",
        "__fpga_kernel_place_correct_pass",
+       "intel_fpga_insert_calib_pass",
        // "opencl_kernel_place_correct_pass", // uncommit this pass
        "mlu_postprocess_pass",
        // info(target/precision/layout/device)
