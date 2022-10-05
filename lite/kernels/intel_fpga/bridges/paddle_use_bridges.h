@@ -15,3 +15,4 @@
 #pragma once
 USE_SUBGRAPH_BRIDGE(conv2d, kIntelFPGA);
 USE_SUBGRAPH_BRIDGE(depthwise_conv2d, kIntelFPGA);
+//USE_SUBGRAPH_BRIDGE(pool2d, kIntelFPGA);

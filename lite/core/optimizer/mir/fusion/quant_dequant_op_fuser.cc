@@ -570,6 +570,14 @@ void QuantDequantOpFuser::InsertNewNode(SSAGraph* graph,
 
     if (input_var_is_activation) {
       op_info.SetInputScale(input_var_name, scales);
+      if(op_type == "conv2d" ||
+      op_type == "depthwise_conv2d" ||
+      op_type == "conv2d_transpose"||op_type == "mul" || op_type == "matmul")
+        ;
+      else{
+        op_info.SetAttr("forced_int8", true);
+        op_info.SetAttr("forced_scale", scales.front());
+      }
     } else {
       std::string op_type = op_info.Type();
       const int quant_axis =
