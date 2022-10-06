@@ -44,11 +44,11 @@ class SubgraphEngine : public subgraph::SubgraphEngineBase {
  protected:
   bool BuildDeviceProgram() override {
   if (!origin_program_) {
-    //LOG(INFO) << "Build intelfpga origin pragram.";
+    LOG(INFO) << "Build intelfpga origin pragram.";
     BuildOriginProgram();
   }
   if (!device_programs_.count(origin_idims_)) {
-    //LOG(INFO) << "Build intelfpga subgraph pragram.";
+    LOG(INFO) << "Build intelfpga subgraph pragram.";
     int status = 0;
     auto graph = std::make_shared<subgraph::intel_fpga::Graph>();
     graph->set_input_names(input_names_);
@@ -85,11 +85,11 @@ bool LaunchDeviceProgram() override {
   };
 
   if (device_programs_.count(origin_idims_) == 0) {
-    //LOG(INFO) << "Launch intelfpga origin pragram.";
+    LOG(INFO) << "Launch intelfpga origin pragram.";
     return LaunchOriginProgram();
   }
 
-//  LOG(INFO) << "Launch intelfpga subgraph pragram.";
+  LOG(INFO) << "Launch intelfpga subgraph pragram.";
   return device_programs_[origin_idims_]->ExecuteDeviceGraph();
 }
   bool InputShapeChanged() override{}

@@ -30,28 +30,18 @@ namespace lite {
 namespace subgraph {
 namespace intel_fpga {
 
-// Graph and node is defined to collect all of converted HiAI IR nodes
-//  struct Node {
-//   public:
-//  	Node* parent_{nullptr}; // The op which it's input tensor belong to.
-//  	Node* next_{nullptr};  // Next op to be executed in topological order.
-//    nna_conv_s* device_param_{nullptr};
-//    int outpu_tensor_ref_{0}; // Output tensor reference count.
-//  };
-
 using Node = DeviceGraphNode;
 class Graph {
  public:
   // bool ExecuteDeviceGraph();
   bool ExecuteDeviceGraph() {
     return intelfpga_subgraph(root_);
-  // return fpga_exec_engine_->FpgaExecute();
-  } 
+  }
   // For device graph, each node's output should be set.
   // And for input and output node, allocate space for device input and output.
   bool BuildDeviceModel();
-  
-  // The node in subgraph whose output ref count is larger than 1 is constricted 
+
+  // The node in subgraph whose output ref count is larger than 1 is constricted
   // to no more than 10. Also, the input, filter and output size should be check.
   bool DeviceModelValidCheck();
 
@@ -68,6 +58,10 @@ class Graph {
            delete device_param->scale;
          }
          delete node->device_param_;
+       }
+       if (node->node_param_) {
+         delete node->node_param_;
+         node->node_param_ = nullptr;
        }
       // Delete node itself.
       auto node_delete = node;
@@ -106,7 +100,7 @@ class Graph {
       std::cout << "[IntelFPGA] Node" << name << " is redefined.";
     }
   }
-  
+
   Node* GetNodeByTensorName(std::string name) {
     if(tensor2node_.find(name) != tensor2node_.end()) {
       return tensor2node_[name];
@@ -129,7 +123,6 @@ class Graph {
     tail_ = node;
   }
 
-  
  private:
   Node* root_{nullptr};
   Node* tail_{nullptr};
@@ -138,13 +131,6 @@ class Graph {
   // std::map<std::string, int> tensor_ref_count_; // Referencing count of tensor.
   std::map<std::string, Node*> tensor2node_; // Map tensor to node which output this tensor.
   // Subgraph input.
-  int8_t* din_{nullptr};
-  // Subgraph output.
-  std::map<Node*, int8_t*> output_nodes_;
-  // Max device output size;
-  int max_device_output_size_{0};
-  // std::shared_ptr<FpgaEngine> fpga_exec_engine_;
-  int8_t* data_buff_;
 };
 
 }  // namespace apu

@@ -575,8 +575,9 @@ void QuantDequantOpFuser::InsertNewNode(SSAGraph* graph,
       op_type == "conv2d_transpose"||op_type == "mul" || op_type == "matmul")
         ;
       else{
+        LOG(INFO) << op_type << ":" << input_var_name <<": " << output_var_name; 
         op_info.SetAttr("forced_int8", true);
-        op_info.SetAttr("forced_scale", scales.front());
+        op_info.SetAttr(input_var_name + "_forced_scale", scales.front());
       }
     } else {
       std::string op_type = op_info.Type();

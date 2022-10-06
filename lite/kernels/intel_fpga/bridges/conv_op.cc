@@ -23,6 +23,7 @@ namespace subgraph {
 namespace intel_fpga {
 
 int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
+    LOG(INFO) << "Converting conv2d op for intelfpga.";
     CHECK(ctx != nullptr);
     CHECK(op != nullptr);
     auto graph = static_cast<Graph*>(ctx);
@@ -44,14 +45,12 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
 
     Node* node = new Node();
     node->is_output = graph->IsOutput(output_name);
-    //    node->output_ref_count_ = 0;
-    node->parent_ =nullptr;
+
     // Find this node's parent according to input tensor.
     if(graph->GetNodeByTensorName(input_name)) {
-        node->parent_ = graph->GetNodeByTensorName(input_name);
-        // Increat parent's output tensor reference.
-        // (node->parent_)->output_ref_count_++;
-    } else { //No parent. So mark this node as root.
+        node->parent_vec_.push_back(graph->GetNodeByTensorName(input_name));
+    } else if (graph->getGraphRootNode() == nullptr) { //No parent. So mark this node as root.
+      node->is_input = true;
       graph->setGraphRootNode(node);
     }
 
@@ -61,7 +60,7 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     // Let predecessor node in topological order link to this node.
     auto pre_node = graph->getGraphTailNode();
     if(pre_node) {
-    pre_node->next_ = node;
+      pre_node->next_ = node;
     }
 
     graph->setGraphTailNode(node);
@@ -70,14 +69,22 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     intelfpga_compute_s* device_param = new intelfpga_compute_s();
     node->device_param_ = device_param;
 
-    device_param->ia = param.x->mutable_data<int8_t>();
-    device_param->oa = param.output->mutable_data<int8_t>();
+    if (node->is_input) {
+      device_param->ia = param.x->mutable_data<int8_t>();
+    }
+    if (node->is_output) {
+      device_param->oa = param.output->mutable_data<int8_t>();
+    }
     device_param->ka = param.filter->mutable_data<int8_t>();
     float *ba = param.bias ? param.bias->mutable_data<float>() : nullptr;
     float *scale=param.weight_scale.data() ? param.weight_scale.data() : nullptr;
 
     // Fill fpga_param.
     auto w_dims = param.filter->dims();
+    LOG(INFO) << "Filter name: " << filter_name << ": ("
+        << w_dims[0] << ", "
+        << w_dims[1] << ", " << w_dims[2] << ", "
+        << w_dims[3] <<")";
     auto i_dims = param.x->dims();
     auto o_dims = param.output->dims();
     int group = param.groups;
@@ -160,6 +167,7 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
         device_param->param.weight_size = config.weight_size;
         device_param->param.weight_offset = config.weight_offset;
     }
+    LOG(INFO) << "Converting conv2d op for intelfpga end.";
   return SUCCESS;
 }
 

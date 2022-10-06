@@ -38,14 +38,14 @@ int PoolConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     Node* node = new Node();
     node->is_output = graph->IsOutput(output_name);
     //    node->output_ref_count_ = 0;
-    node->parent_ =nullptr;
     // Find this node's parent according to input tensor.
     if(graph->GetNodeByTensorName(input_name)) {
-        node->parent_ = graph->GetNodeByTensorName(input_name);
+        node->parent_vec_.push_back(graph->GetNodeByTensorName(input_name));
         // Increat parent's output tensor reference.
         // (node->parent_)->output_ref_count_++;
-    } else { //No parent. So mark this node as root.
-    graph->setGraphRootNode(node); 
+    } else if (graph->getGraphRootNode() == nullptr) {
+      node->is_input = true;
+      graph->setGraphRootNode(node);
     }
 
     // Put this node's output tensor in map.

@@ -111,8 +111,11 @@ void StaticKernelPickPass::Apply(const std::unique_ptr<SSAGraph>& graph) {
       for (auto* out_n : node.outlinks) {
         CHECK(out_n->IsArg());
         for (auto* tmp_op : out_n->outlinks) {
-          CHECK(tmp_op->IsStmt());
           auto* tmp_op_info = tmp_op->AsStmt().op_info();
+          CHECK(tmp_op->IsStmt());
+          if (tmp_op_info->Type() == "subgraph") {
+            tmp_op->stmt()->mutable_op_info()->SetAttr("enable_int8", true);
+          }
           if (!tmp_op_info->HasAttr("enable_int8") ||
               tmp_op_info->Type() == "lstm" || tmp_op_info->Type() == "gru" ||
               instruct.op_type() == "__xpu__multi_encoder" ||

@@ -71,14 +71,16 @@ class IntelFPGAKernelPlaceCorrectPass : public ProgramPass {
       std::string node_name = out->AsArg().name;
       auto op_type = inst.op_type();
 
-      if(op_type == "conv2d" || op_type == "depthwise_conv2d") {
+      if(op_type == "conv2d" || op_type == "depthwise_conv2d" ||
+         op_type == "fusion_elementwise_add_activation" ||
+         op_type == "nearest_interp_v2") {
         bool has_quantized_op_after = false;
         for(auto* out_n: x->outlinks) {
           CHECK(out_n->IsArg());
           for(auto* tmp_op: out_n->outlinks) {
             CHECK(tmp_op->IsStmt());
             auto* tmp_op_info = tmp_op->AsStmt().op_info();
-            if(tmp_op_info->HasAttr("forced_scale")) {
+            if(tmp_op_info->HasAttr("forced_int8")) {
               has_quantized_op_after = true;
               auto out_node_name = out_n->arg()->name;
               std::vector<float> scale_v = {0.f};
