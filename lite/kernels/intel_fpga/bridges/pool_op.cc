@@ -36,6 +36,7 @@ int PoolConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     auto output_name = op_info->Output("Out").front();
 
     Node* node = new Node();
+    node->is_input = graph->IsInput(input_name);
     node->is_output = graph->IsOutput(output_name);
     //    node->output_ref_count_ = 0;
     // Find this node's parent according to input tensor.
@@ -44,10 +45,20 @@ int PoolConverter(void *ctx, OpLite *op, KernelBase *kernel) {
         // Increat parent's output tensor reference.
         // (node->parent_)->output_ref_count_++;
     } else if (graph->getGraphRootNode() == nullptr) {
-      node->is_input = true;
       graph->setGraphRootNode(node);
     }
-
+    auto x_scale_name = "X0_scale";
+    std::vector<float> x_scales;
+    if (op_info->HasInputScale(x_scale_name, true)) {
+      x_scales = op_info->GetInputScale(x_scale_name, true);
+    }
+    LOG(INFO) << "X0_scale: " << x_scales[0];
+    auto out_scale_name = "Out0_scale";
+    std::vector<float> out_scales;
+     if (op_info->HasOutputScale(out_scale_name, true)) {
+      out_scales = op_info->GetOutputScale(out_scale_name, true);
+    }
+    LOG(INFO) << "Out0_scale: " << out_scales[0];
     // Put this node's output tensor in map.
     graph->setTensor2Node(output_name, node);
 
@@ -72,8 +83,8 @@ int PoolConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     auto paddings = *param.paddings; 
     //init scale
     device_param->scale = new float[2+2*o_dims[1]];
-    device_param->scale[0]= param.input_scale;
-    device_param->scale[1]= param.output_scale;
+    device_param->scale[0]= x_scales[0];
+    device_param->scale[1]= out_scales[0];
     for(int i=0;i<o_dims[1];i++)
         device_param->scale[2+o_dims[1]+i]=0;
 

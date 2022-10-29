@@ -72,6 +72,7 @@ class SubgraphEngine : public subgraph::SubgraphEngineBase {
       }
     }
     graph->BuildDeviceModel();
+    CHECK(device_programs_.count(origin_idims_) == 0);
     device_programs_[origin_idims_] = graph;
   }
   return true;

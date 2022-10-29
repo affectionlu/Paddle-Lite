@@ -45,12 +45,12 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
 
     Node* node = new Node();
     node->is_output = graph->IsOutput(output_name);
+    node->is_input = graph->IsInput(input_name);
 
     // Find this node's parent according to input tensor.
     if(graph->GetNodeByTensorName(input_name)) {
         node->parent_vec_.push_back(graph->GetNodeByTensorName(input_name));
     } else if (graph->getGraphRootNode() == nullptr) { //No parent. So mark this node as root.
-      node->is_input = true;
       graph->setGraphRootNode(node);
     }
 
@@ -65,31 +65,25 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
 
     graph->setGraphTailNode(node);
     node->next_= nullptr;
+    node->name_ = output_name;
     // Create node's device param.
     intelfpga_compute_s* device_param = new intelfpga_compute_s();
     node->device_param_ = device_param;
 
-    if (node->is_input) {
-      device_param->ia = param.x->mutable_data<int8_t>();
-    }
-    if (node->is_output) {
-      device_param->oa = param.output->mutable_data<int8_t>();
-    }
+    device_param->ia = param.x->mutable_data<int8_t>();
+    device_param->oa = param.output->mutable_data<int8_t>();
     device_param->ka = param.filter->mutable_data<int8_t>();
     float *ba = param.bias ? param.bias->mutable_data<float>() : nullptr;
     float *scale=param.weight_scale.data() ? param.weight_scale.data() : nullptr;
 
     // Fill fpga_param.
     auto w_dims = param.filter->dims();
-    LOG(INFO) << "Filter name: " << filter_name << ": ("
-        << w_dims[0] << ", "
-        << w_dims[1] << ", " << w_dims[2] << ", "
-        << w_dims[3] <<")";
     auto i_dims = param.x->dims();
     auto o_dims = param.output->dims();
     int group = param.groups;
     auto paddings = *param.paddings;
     auto dilations = *param.dilations;
+    CHECK_EQ(dilations[0], 1);
     uint32_t at_;
 
     switch (param.activation_param.active_type) {
@@ -111,6 +105,7 @@ int ConvConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     device_param->scale = new float[2+2*o_dims[1]];
     device_param->scale[0]= param.input_scale;
     device_param->scale[1]= param.output_scale;
+    graph->SetScale(input_name, param.input_scale);
     if(scale){
         for(int i=0;i<o_dims[1];i++)
         {

@@ -47,26 +47,32 @@ class IntelFPGAInsertCalibPass : public ProgramPass {
 
       // Aadd enble_int8 attrr to subgraph op.
       if (op_type == "subgraph") {
-        x->stmt()->mutable_op_info()->SetAttr("enable_int8", true);
-        continue;
-      }
-
-      auto p = in->AsArg().type->precision();
-
-      if (inst.op_info()->HasAttr("forced_scale")) {
-        if (p == PrecisionType::kInt8) {
-          auto to = LiteType::GetTensorTy(
-                    TargetType::kARM, PrecisionType::kFloat, DataLayoutType::kNCHW);
-          auto type_precision_pass = dynamic_cast<PrecisionCastPass*>(PassManager::Global().LookUp("type_precision_cast_pass"));
-          type_precision_pass->AddCastInst(*in->AsArg().type,
+        //x->stmt()->mutable_op_info()->SetAttr("enable_int8", true);
+        for(auto* out_n: x->outlinks) {
+          CHECK(out_n->IsArg());
+          for(auto* tmp_op: out_n->outlinks) {
+            //CHECK(tmp_op->IsStmt());
+            if (!tmp_op->IsStmt()) {
+              break;
+            }
+            auto* tmp_op_info = tmp_op->AsStmt().op_info();
+            if(tmp_op_info->HasAttr("forced_scale")) {
+              auto to = LiteType::GetTensorTy(
+                  TargetType::kARM, PrecisionType::kFloat, DataLayoutType::kNCHW);
+              auto type_precision_pass =
+                  dynamic_cast<PrecisionCastPass*>(PassManager::Global().LookUp("type_precision_cast_pass"));
+              type_precision_pass->AddCastInst(*out_n->AsArg().type,
                          *to,
-                         in,
+                         out_n,
                          graph,
-                         x,
+                         tmp_op,
                          &cast_nodes,
                          graph->valid_places());
+            }
+          }
         }
       }
+
     }
   }
 };

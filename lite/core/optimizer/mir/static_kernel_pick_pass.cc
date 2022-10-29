@@ -163,6 +163,9 @@ void StaticKernelPickPass::Apply(const std::unique_ptr<SSAGraph>& graph) {
       // int8 input and int8 output.
       // If the out_type_int8 is false, we should pick the kernel with the
       // int8 input and fp32 output.
+      if (instruct.op_type() == "subgraph") {
+        out_type_int8 = true;
+      }
       auto output_arguments = instruct.op_info()->OutputArgumentNames();
       for (auto& candidate : scored) {
         bool all_output_type_match = true;

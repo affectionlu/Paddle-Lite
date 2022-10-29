@@ -38,17 +38,22 @@ int ElementwiseConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     auto y_tensor = scope->FindMutableTensor(input_y_name);
     auto out_tensor = scope->FindMutableTensor(output_name);
 
-    auto x_scale_name = "X0_scale";
     std::vector<float> x_scales;
-    if (op_info->HasInputScale(x_scale_name, true)) {
-      x_scales = op_info->GetInputScale(x_scale_name, true);
+    std::vector<float> y_scales;
+    auto x_scale_name = "X0_scale";
+    if (op_info->HasAttr("forced_scale")) {
+      x_scales.push_back(op_info->GetAttr<float>(input_x_name + "_forced_scale"));
+      y_scales.push_back(op_info->GetAttr<float>(input_y_name + "_forced_scale"));
+    } else {
+      if (op_info->HasInputScale(x_scale_name, true)) {
+        x_scales = op_info->GetInputScale(x_scale_name, true);
+      }
+      auto y_scale_name = "Y0_scale";
+      if (op_info->HasInputScale(y_scale_name, true)) {
+        y_scales = op_info->GetInputScale(y_scale_name, true);
+      }
     }
     LOG(INFO) << "X0_scale: " << x_scales[0];
-    auto y_scale_name = "Y0_scale";
-    std::vector<float> y_scales;
-    if (op_info->HasInputScale(y_scale_name, true)) {
-      y_scales = op_info->GetInputScale(y_scale_name, true);
-    }
     LOG(INFO) << "Y0_scale: " << y_scales[0];
     auto out_scale_name = "Out0_scale";
     std::vector<float> out_scales;
@@ -68,12 +73,14 @@ int ElementwiseConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     }
     auto act_type =
       op_info->HasAttr("act_type") ? op_info->GetAttr<std::string>("act_type") : "";
-    if (act_type != "relu") { 
+    LOG(INFO) << "act_type: " << act_type;
+    if (act_type != "" && act_type != "relu") {
       LOG(FATAL) << "Only support relu for activation for elementwise op.";
     }
 
     Node* node = new Node();
     node->is_output = graph->IsOutput(output_name);
+    node->is_input = graph->IsInput(input_x_name);
     //    node->output_ref_count_ = 0;
     LOG(INFO) << "output_name: " << output_name;
     if (node->is_output) {
@@ -82,6 +89,9 @@ int ElementwiseConverter(void *ctx, OpLite *op, KernelBase *kernel) {
     
     ElementwiseParam* ele_param = new ElementwiseParam();
     node->node_param_ = dynamic_cast<NodeParam*>(ele_param);
+    if (act_type == "relu") {
+      ele_param->ac_type = INTELFPGA_ACT_RELU;
+    }
     ele_param->x_scale = x_scales[0];
     ele_param->y_scale = y_scales[0];
     ele_param->out_scale = out_scales[0];
@@ -93,7 +103,6 @@ int ElementwiseConverter(void *ctx, OpLite *op, KernelBase *kernel) {
       node->parent_vec_.push_back(graph->GetNodeByTensorName(input_y_name));
       LOG(INFO) << "input_y_name: " << input_y_name;
     } else if (graph->getGraphRootNode() == nullptr) {
-      node->is_input = true;
       graph->setGraphRootNode(node); 
     }
     ele_param->input_x = x_tensor->mutable_data<int8_t>();
@@ -153,5 +162,9 @@ int ElementwiseConverter(void *ctx, OpLite *op, KernelBase *kernel) {
 
 REGISTER_SUBGRAPH_BRIDGE(
     fusion_elementwise_add_activation,
+    kIntelFPGA,
+    paddle::lite::subgraph::intel_fpga::ElementwiseConverter);
+REGISTER_SUBGRAPH_BRIDGE(
+    elementwise_add,
     kIntelFPGA,
     paddle::lite::subgraph::intel_fpga::ElementwiseConverter);

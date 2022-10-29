@@ -40,6 +40,7 @@ class Graph {
   // For device graph, each node's output should be set.
   // And for input and output node, allocate space for device input and output.
   bool BuildDeviceModel();
+  void FillAddParam();
 
   // The node in subgraph whose output ref count is larger than 1 is constricted
   // to no more than 10. Also, the input, filter and output size should be check.

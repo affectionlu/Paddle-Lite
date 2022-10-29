@@ -54,8 +54,71 @@ bool Graph::BuildDeviceModel() {
 
     cur_node=cur_node->next_;
   }
-
+  FillAddParam();
   return true;
+}
+
+void Graph::FillAddParam() {
+  LOG(INFO) << "Fill add op param.";
+  auto cur_node = root_;
+  while(cur_node) {
+    if (cur_node->device_param_->param.type == INTELFPGA_ELE_ADD) {
+      auto& add_param = dynamic_cast<ElementwiseParam*>(cur_node->node_param_)
+                           ->add_param;
+      add_param.input1_c = cur_node->parent_vec_[0]->device_param_
+                                   ->param.in_c;
+      add_param.input1_h = cur_node->parent_vec_[0]->device_param_
+                                   ->param.in_h;
+      add_param.input1_w = cur_node->parent_vec_[0]->device_param_
+                                   ->param.in_w;
+      add_param.input2_c = cur_node->parent_vec_[1]->device_param_
+                                   ->param.in_c;
+      add_param.input2_h = cur_node->parent_vec_[1]->device_param_
+                                   ->param.in_h;
+      add_param.input2_w = cur_node->parent_vec_[1]->device_param_
+                                   ->param.in_w;
+      add_param.output_c = cur_node->device_param_
+                                   ->param.output_c;
+      add_param.output_h = cur_node->device_param_
+                                   ->param.output_h;
+      add_param.output_w = cur_node->device_param_
+                                   ->param.output_w;
+      add_param.input1_scale = dynamic_cast<ElementwiseParam*>(cur_node->node_param_)
+                                  ->x_scale;
+      add_param.input2_scale = dynamic_cast<ElementwiseParam*>(cur_node->node_param_)
+                                  ->y_scale;
+      add_param.output_scale = dynamic_cast<ElementwiseParam*>(cur_node->node_param_)
+                                  ->out_scale;
+      add_param.input1_scale = add_param.input1_scale / add_param.output_scale;
+      add_param.input2_scale = add_param.input2_scale / add_param.output_scale;
+      add_param.type = int(BinaryOpType::op_add);
+      add_param.relu = dynamic_cast<ElementwiseParam*>(cur_node->node_param_)
+                                  ->ac_type;
+      int input1_size = up_round(add_param.input1_c, INPUT_CHANNEL_TILE)
+                           * INPUT_CHANNEL_TILE
+                           * add_param.input1_h
+                           * add_param.input1_w;
+      int input2_size = up_round(add_param.input2_c, INPUT_CHANNEL_TILE)
+                           * INPUT_CHANNEL_TILE
+                           * add_param.input2_h
+                           * add_param.input2_w;
+      int output_size = up_round(add_param.output_c, INPUT_CHANNEL_TILE)
+                           * INPUT_CHANNEL_TILE
+                           * add_param.output_h
+                           * add_param.output_w;
+      add_param.input1_offset = (cur_node->parent_vec_[0]->device_param_
+                                   ->param.output_offset)
+                                   * INPUT_CHANNEL_TILE / ADD_INPUT_EXTEND_SCALE;
+      add_param.input2_offset = (cur_node->parent_vec_[1]->device_param_
+                                   ->param.output_offset)
+                                   * INPUT_CHANNEL_TILE / ADD_INPUT_EXTEND_SCALE;
+      add_param.output_offset = (cur_node->device_param_
+                                    ->param.output_offset)
+                                    * INPUT_CHANNEL_TILE / ADD_INPUT_EXTEND_SCALE;
+    }
+    cur_node=cur_node->next_;
+  }
+  LOG(INFO) << "Fill add op param done.";
 }
 
 bool Graph::DeviceModelValidCheck() {
